@@ -1,41 +1,36 @@
 package lvhaoxuan.custom.cuilian.api;
 
 import lvhaoxuan.custom.cuilian.NewCustomCuiLianPro;
+import lvhaoxuan.custom.cuilian.engine.NativeAttributeEngine;
 import lvhaoxuan.custom.cuilian.message.Message;
 import lvhaoxuan.custom.cuilian.object.Gem;
 import lvhaoxuan.custom.cuilian.object.Level;
 import lvhaoxuan.custom.cuilian.util.ItemUtil;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.title.TitlePart;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Core API for Gem Socketing (宝石镶嵌), Socket Punching (装备打孔), and Gem Extraction (宝石拆卸).
- * Stores socket count and socketed gem IDs in Paper 1.20.4 PersistentDataContainer (PDC)
- * while rendering clean, AttributePlus/SX-Attribute-compatible Lore lines.
+ * Core API for in-bag 1-click Gem Socketing, 5-to-1 Gem Binding, and Gem Extraction.
+ * All feedback is chat-only (no Title popups). Equipment has gemMaxSlots open by default (no punching).
  */
 public final class GemAPI {
 
-    public static NamespacedKey KEY_SLOTS;
     public static NamespacedKey KEY_GEMS;
 
     private GemAPI() {
     }
 
     public static void initKeys(NewCustomCuiLianPro plugin) {
-        KEY_SLOTS = new NamespacedKey(plugin, "gem_slots");
         KEY_GEMS = new NamespacedKey(plugin, "gem_list");
     }
 
@@ -43,30 +38,7 @@ public final class GemAPI {
         if (!ItemUtil.isNotEmpty(item) || !CuiLianAPI.canCuiLian(item)) {
             return 0;
         }
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null || KEY_SLOTS == null) {
-            return NewCustomCuiLianPro.gemDefaultSlots;
-        }
-        PersistentDataContainer pdc = meta.getPersistentDataContainer();
-        if (pdc.has(KEY_SLOTS, PersistentDataType.INTEGER)) {
-            Integer val = pdc.get(KEY_SLOTS, PersistentDataType.INTEGER);
-            return val != null ? Math.max(0, Math.min(val, NewCustomCuiLianPro.gemMaxSlots)) : 0;
-        }
-        return NewCustomCuiLianPro.gemDefaultSlots;
-    }
-
-    public static void setSlotCount(ItemStack item, int slots) {
-        if (!ItemUtil.isNotEmpty(item)) {
-            return;
-        }
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null || KEY_SLOTS == null) {
-            return;
-        }
-        int clamped = Math.max(0, Math.min(slots, NewCustomCuiLianPro.gemMaxSlots));
-        meta.getPersistentDataContainer().set(KEY_SLOTS, PersistentDataType.INTEGER, clamped);
-        item.setItemMeta(meta);
-        refreshGemLore(item);
+        return NewCustomCuiLianPro.gemMaxSlots;
     }
 
     public static List<String> getSocketedGemIds(ItemStack item) {
@@ -143,10 +115,6 @@ public final class GemAPI {
         return lore;
     }
 
-    /**
-     * Re-renders the Gem Lore section at the bottom of the item's lore without disturbing
-     * original lore, tempering lore, or protect rune lore.
-     */
     public static ItemStack refreshGemLore(ItemStack item) {
         if (!ItemUtil.isNotEmpty(item) || !CuiLianAPI.canCuiLian(item)) {
             return item;
@@ -159,13 +127,10 @@ public final class GemAPI {
                 ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
         cleanGemLore(lore);
 
-        PersistentDataContainer pdc = meta.getPersistentDataContainer();
-        boolean hasExplicitSlots = KEY_SLOTS != null && pdc.has(KEY_SLOTS, PersistentDataType.INTEGER);
         List<String> gemIds = getSocketedGemIds(item);
         int totalSlots = getSlotCount(item);
 
-        // Render gem section if the item has explicit slots punched OR has socketed gems
-        if (hasExplicitSlots || !gemIds.isEmpty()) {
+        if (!gemIds.isEmpty()) {
             if (NewCustomCuiLianPro.GEM_UNDER_LINE != null && !NewCustomCuiLianPro.GEM_UNDER_LINE.isEmpty()) {
                 lore.add(NewCustomCuiLianPro.GEM_UNDER_LINE);
             }
@@ -189,10 +154,6 @@ public final class GemAPI {
         return item;
     }
 
-    /**
-     * Validates whether a gem can be socketed onto an equipment item.
-     * Returns null if valid, or an error message string if invalid.
-     */
     public static String validateInlay(ItemStack equip, Gem gem) {
         if (!NewCustomCuiLianPro.gemEnable) {
             return Message.GEM_DISABLED;
@@ -209,19 +170,19 @@ public final class GemAPI {
         if (currentLv < gem.minCuiLianLevel) {
             return Message.GEM_LEVEL_TOO_LOW.replace("%d", String.valueOf(gem.minCuiLianLevel));
         }
-        int emptySlots = getEmptySlotCount(equip);
-        if (emptySlots <= 0) {
+        if (getEmptySlotCount(equip) <= 0) {
             return Message.GEM_NO_EMPTY_SLOT;
         }
         List<String> currentGems = getSocketedGemIds(equip);
         if (gem.maxSameGem > 0) {
-            int sameCount = 0;
+            int sameFamilyCount = 0;
             for (String id : currentGems) {
-                if (id.equals(gem.id)) {
-                    sameCount++;
+                Gem existing = Gem.gems.get(id);
+                if (existing != null && existing.family.equals(gem.family)) {
+                    sameFamilyCount++;
                 }
             }
-            if (sameCount >= gem.maxSameGem) {
+            if (sameFamilyCount >= gem.maxSameGem) {
                 return Message.GEM_MAX_SAME_REACHED.replace("%d", String.valueOf(gem.maxSameGem));
             }
         }
@@ -246,7 +207,7 @@ public final class GemAPI {
     }
 
     /**
-     * Attempts to socket a gem into an equipment item.
+     * Sockets a gem directly onto an equipment item (chat feedback only, no Title popup).
      */
     public static InlayResult inlayGem(ItemStack equip, Gem gem, Player player) {
         String err = validateInlay(equip, gem);
@@ -260,13 +221,6 @@ public final class GemAPI {
         boolean success = ItemUtil.rollChance(gem.chance);
         if (success) {
             ItemStack updated = equip.clone();
-            // Ensure slot count is explicitly persisted once a gem is added
-            int slots = getSlotCount(updated);
-            ItemMeta meta = updated.getItemMeta();
-            if (meta != null && KEY_SLOTS != null && !meta.getPersistentDataContainer().has(KEY_SLOTS, PersistentDataType.INTEGER)) {
-                meta.getPersistentDataContainer().set(KEY_SLOTS, PersistentDataType.INTEGER, slots);
-                updated.setItemMeta(meta);
-            }
             List<String> ids = getSocketedGemIds(updated);
             ids.add(gem.id);
             saveSocketedGemIds(updated, ids);
@@ -275,9 +229,8 @@ public final class GemAPI {
             String msg = Message.GEM_INLAY_SUCCESS.replace("%s", gem.name);
             if (player != null) {
                 player.sendMessage(msg);
-                player.sendTitlePart(TitlePart.TITLE, Component.text("镶嵌成功", NamedTextColor.AQUA));
-                player.sendTitlePart(TitlePart.SUBTITLE, Component.text(gem.name));
-                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.3f);
+                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 0.9f, 1.3f);
+                NativeAttributeEngine.syncEntity(player);
             }
             return new InlayResult(true, true, false, updated, msg);
         } else {
@@ -292,60 +245,47 @@ public final class GemAPI {
             String msg = gem.failDestroyGem ? Message.GEM_INLAY_FAIL : Message.GEM_INLAY_FAIL_KEEP;
             if (player != null) {
                 player.sendMessage(msg);
-                player.sendTitlePart(TitlePart.TITLE, Component.text("镶嵌失败", NamedTextColor.RED));
-                player.sendTitlePart(TitlePart.SUBTITLE, Component.text(gem.name));
-                player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 1.0f);
+                player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 0.9f, 1.0f);
             }
             return new InlayResult(false, gem.failDestroyGem, false, equip, msg);
         }
     }
 
     /**
-     * Attempts to punch (+1) a new gem slot into an equipment item.
+     * Merges 5 identical-tier gems + 1 BinderItem into 1 next-tier gem (Lv.1 -> Lv.2 ... -> Lv.5).
+     * Returns true if 1 BinderItem should be consumed from the cursor.
      */
-    public static boolean punchSlot(ItemStack equip, Player player, boolean guaranteed) {
-        if (!NewCustomCuiLianPro.gemEnable) {
-            if (player != null) {
-                player.sendMessage(Message.GEM_DISABLED);
-            }
+    public static boolean bindGem(Player player, Gem sourceGem) {
+        if (!NewCustomCuiLianPro.gemEnable || player == null || sourceGem == null) {
             return false;
         }
-        if (!ItemUtil.isNotEmpty(equip) || !CuiLianAPI.canCuiLian(equip)) {
-            if (player != null) {
-                player.sendMessage(Message.GEM_CAN_NOT_INLAY);
-            }
+        Gem nextGem = sourceGem.getNextTier();
+        if (nextGem == null) {
+            player.sendMessage(Message.GEM_BIND_MAX_LEVEL);
             return false;
         }
-        int current = getSlotCount(equip);
-        if (current >= NewCustomCuiLianPro.gemMaxSlots) {
-            if (player != null) {
-                player.sendMessage(Message.GEM_PUNCH_MAX.replace("%d", String.valueOf(NewCustomCuiLianPro.gemMaxSlots)));
-            }
+        int need = Gem.binderNeedAmount;
+        if (!ItemUtil.inventoryHasSimilar(player.getInventory(), sourceGem.item, need)) {
+            player.sendMessage(Message.GEM_BIND_NOT_ENOUGH);
             return false;
         }
-        if (guaranteed || ItemUtil.rollChance(Gem.punchChance)) {
-            int next = current + 1;
-            setSlotCount(equip, next);
-            if (player != null) {
-                String msg = Message.GEM_PUNCH_SUCCESS
-                        .replaceFirst("%d", String.valueOf(next))
-                        .replaceFirst("%d", String.valueOf(NewCustomCuiLianPro.gemMaxSlots));
-                player.sendMessage(msg);
-                player.playSound(player.getLocation(), Sound.BLOCK_SMITHING_TABLE_USE, 1.0f, 1.2f);
+        if (ItemUtil.rollChance(Gem.binderChance)) {
+            ItemUtil.inventoryRemoveSimilar(player.getInventory(), sourceGem.item, need);
+            Map<Integer, ItemStack> overflow = player.getInventory().addItem(nextGem.createItemStack(1));
+            for (ItemStack drop : overflow.values()) {
+                player.getWorld().dropItemNaturally(player.getLocation(), drop);
             }
-            return true;
+            player.sendMessage(Message.GEM_BIND_SUCCESS.replace("%s", nextGem.name));
+            player.playSound(player.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.35f);
         } else {
-            if (player != null) {
-                player.sendMessage(Message.GEM_PUNCH_FAIL);
-                player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 0.9f);
-            }
-            return false;
+            player.sendMessage(Message.GEM_BIND_FAIL);
+            player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 0.9f, 0.9f);
         }
+        return true;
     }
 
     /**
-     * Attempts to extract a gem at the given index from the equipment.
-     * Returns the extracted Gem if successful, or null if failed/invalid.
+     * Extracts the gem at the specified index from the equipment.
      */
     public static Gem removeGemAt(ItemStack equip, int index, Player player) {
         List<String> ids = getSocketedGemIds(equip);
@@ -364,21 +304,18 @@ public final class GemAPI {
                 String name = gem != null ? gem.name : gemId;
                 player.sendMessage(Message.GEM_REMOVE_SUCCESS.replace("%s", name));
                 player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
+                NativeAttributeEngine.syncEntity(player);
             }
             return gem;
         } else {
             if (player != null) {
                 player.sendMessage(Message.GEM_REMOVE_FAIL);
-                player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 0.9f);
+                player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 0.9f, 0.9f);
             }
             return null;
         }
     }
 
-    /**
-     * Collects all potion effect strings ("POTION_NAME AMPLIFIER") from gems socketed
-     * across an entity's armor and held items.
-     */
     public static List<String> collectEquippedGemPotions(ItemStack[] armor, ItemStack mainHand, ItemStack offHand) {
         List<String> potions = new ArrayList<>();
         if (!NewCustomCuiLianPro.gemEnable) {

@@ -7,7 +7,6 @@ import lvhaoxuan.custom.cuilian.object.Level;
 import lvhaoxuan.custom.cuilian.object.Stone;
 import lvhaoxuan.custom.cuilian.object.SuitEffect;
 import lvhaoxuan.custom.cuilian.util.ItemUtil;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import javax.script.ScriptEngine;
@@ -62,18 +61,8 @@ public class Loader {
         try (InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
             YamlConfiguration config = YamlConfiguration.loadConfiguration(reader);
             Gem.loadTools(config);
-            ConfigurationSection gemSection = config.getConfigurationSection("Gems");
-            if (gemSection != null) {
-                for (String key : gemSection.getKeys(false)) {
-                    try {
-                        Gem gem = Gem.deserialize(config, key);
-                        Gem.gems.put(key, gem);
-                    } catch (Exception ex) {
-                        NewCustomCuiLianPro.ins.getLogger().warning("加载 gem.yml 宝石 '" + key + "' 失败: " + ex.getMessage());
-                    }
-                }
-            }
-            NewCustomCuiLianPro.ins.getLogger().info("已加载 " + Gem.gems.size() + " 种镶嵌宝石。");
+            Gem.loadFamilies(config);
+            NewCustomCuiLianPro.ins.getLogger().info("已加载 " + Gem.gems.size() + " 颗镶嵌宝石（1~5阶）。");
         } catch (Exception ex) {
             NewCustomCuiLianPro.ins.getLogger().log(java.util.logging.Level.SEVERE, "加载 gem.yml 失败", ex);
         }
@@ -105,25 +94,29 @@ public class Loader {
         File file = ensureResource("config.yml");
         try (InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
             YamlConfiguration config = YamlConfiguration.loadConfiguration(reader);
+            NewCustomCuiLianPro.nativeAttributeEngine = config.getBoolean("NativeAttributeEngine", true);
             NewCustomCuiLianPro.otherEntitySuitEffect = config.getBoolean("OtherEntitySuitEffect", false);
             NewCustomCuiLianPro.PROTECT_RUNE_JUDGE = ItemUtil.color(config.getString("PROTECT_RUNE_JUDGE", "§a§l保护符: "));
             NewCustomCuiLianPro.LEVEL_JUDGE = ItemUtil.color(config.getString("LEVEL_JUDGE", "§e§l淬炼属性: "));
             MoveLevelHandle.moveLevelInvTitle = ItemUtil.color(config.getString("MoveLevelInvTitle", "§8淬炼移星"));
-            NewCustomCuiLianPro.judgeOffHand = config.getBoolean("JudgeOffHand", true);
-            NewCustomCuiLianPro.displayNameFormat = config.getInt("DisplayNameFormat", 0);
+            NewCustomCuiLianPro.judgeOffHand = config.getBoolean("JudgeOffHand", false);
+            NewCustomCuiLianPro.displayNameFormat = config.getInt("DisplayNameFormat", 1);
             NewCustomCuiLianPro.replaceLore = config.getStringList("ReplaceLore");
+
+            // High-star particle settings
+            NewCustomCuiLianPro.particleEnable = config.getBoolean("ParticleEffect.Enable", true);
+            NewCustomCuiLianPro.particleMinLevel = Math.max(1, config.getInt("ParticleEffect.MinLevel", 6));
 
             // Gem settings
             NewCustomCuiLianPro.gemEnable = config.getBoolean("Gem.Enable", true);
             NewCustomCuiLianPro.gemMaxSlots = Math.max(1, config.getInt("Gem.MaxSlots", 3));
-            NewCustomCuiLianPro.gemDefaultSlots = Math.max(0, Math.min(config.getInt("Gem.DefaultSlots", 1), NewCustomCuiLianPro.gemMaxSlots));
             NewCustomCuiLianPro.GEM_JUDGE = ItemUtil.color(config.getString("Gem.GEM_JUDGE", "§b§l宝石属性: "));
             NewCustomCuiLianPro.GEM_UNDER_LINE = ItemUtil.color(config.getString("Gem.UNDER_LINE",
                     "§b§l§m  §3§l§m  §9§l§m  §e§l宝石镶嵌§9§l§m  §3§l§m  §b§l§m  "));
             NewCustomCuiLianPro.GEM_SLOT_EMPTY_LORE = ItemUtil.color(config.getString("Gem.SLOT_EMPTY_LORE", "§7◇ 空宝石槽位"));
             NewCustomCuiLianPro.GEM_SLOT_FILLED_PREFIX = ItemUtil.color(config.getString("Gem.SLOT_FILLED_PREFIX", "§b◆ "));
-            NewCustomCuiLianPro.gemInlayInvTitle = ItemUtil.color(config.getString("Gem.InlayInvTitle", "§8装备宝石镶嵌"));
             NewCustomCuiLianPro.gemRemoveInvTitle = ItemUtil.color(config.getString("Gem.RemoveInvTitle", "§8装备宝石拆卸"));
+            NewCustomCuiLianPro.opItemsInvTitle = ItemUtil.color(config.getString("Gem.OpItemsInvTitle", "§8[OP] 淬炼与宝石全物品库"));
         } catch (Exception ex) {
             NewCustomCuiLianPro.ins.getLogger().log(java.util.logging.Level.SEVERE, "加载 config.yml 失败", ex);
         }
@@ -161,7 +154,6 @@ public class Loader {
         }
         ScriptEngine engine = createNashornEngine();
         if (engine == null) {
-            NewCustomCuiLianPro.ins.getLogger().warning("未检测到 NashornJs 或 JavaScript 脚本引擎，移星将使用默认公式 (level1 + level2 - 1)。");
             return null;
         }
         try (InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
@@ -173,9 +165,6 @@ public class Loader {
         }
     }
 
-    /**
-     * Dynamically instantiates Eldoria NashornJs (if installed) or falls back to standard ScriptEngineManager.
-     */
     public static ScriptEngine createNashornEngine() {
         try {
             Class<?> factoryClass = Class.forName("de.eldoria.nashornjs.js.api.scripting.NashornScriptEngineFactory");

@@ -25,6 +25,7 @@ public class CuiLianTabCompleter implements TabCompleter {
             suggestions.add("moveLevel");
             suggestions.add("gem");
             if (admin) {
+                suggestions.add("op");
                 suggestions.add("set");
                 suggestions.add("stone");
                 suggestions.add("stones");
@@ -42,9 +43,8 @@ public class CuiLianTabCompleter implements TabCompleter {
                 if (admin) {
                     suggestions.add("list");
                     suggestions.add("give");
-                    suggestions.add("punch");
+                    suggestions.add("binder");
                     suggestions.add("extractor");
-                    suggestions.add("addslot");
                 }
                 return filter(suggestions, args[1]);
             }
@@ -56,20 +56,18 @@ public class CuiLianTabCompleter implements TabCompleter {
                         return filter(suggestions, args[2]);
                     }
                     if (args.length == 4) {
-                        return List.of("1", "8", "16", "64");
+                        return List.of("1", "5", "16", "64");
                     }
                     if (args.length == 5) {
                         return filter(onlinePlayerNames(), args[4]);
                     }
-                } else if (gSub.equals("punch") || gSub.equals("extractor")) {
+                } else if (gSub.equals("binder") || gSub.equals("extractor")) {
                     if (args.length == 3) {
                         return List.of("1", "5", "16");
                     }
                     if (args.length == 4) {
                         return filter(onlinePlayerNames(), args[3]);
                     }
-                } else if (gSub.equals("addslot") && args.length == 3) {
-                    return List.of("1", "2", "3");
                 }
             }
             return List.of();

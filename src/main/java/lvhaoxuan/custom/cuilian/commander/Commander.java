@@ -2,9 +2,9 @@ package lvhaoxuan.custom.cuilian.commander;
 
 import lvhaoxuan.custom.cuilian.NewCustomCuiLianPro;
 import lvhaoxuan.custom.cuilian.api.CuiLianAPI;
-import lvhaoxuan.custom.cuilian.api.GemAPI;
-import lvhaoxuan.custom.cuilian.gui.GemInlayGuiHolder;
+import lvhaoxuan.custom.cuilian.engine.NativeAttributeEngine;
 import lvhaoxuan.custom.cuilian.gui.GemRemoveGuiHolder;
+import lvhaoxuan.custom.cuilian.gui.OpItemsGuiHolder;
 import lvhaoxuan.custom.cuilian.message.Message;
 import lvhaoxuan.custom.cuilian.movelevel.MoveLevelHandle;
 import lvhaoxuan.custom.cuilian.object.Gem;
@@ -42,7 +42,6 @@ public class Commander implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        // Help command (accessible to all players)
         if (args.length == 0 || (args.length == 1 && args[0].equalsIgnoreCase("help"))) {
             sendHelp(sender);
             return true;
@@ -71,12 +70,22 @@ public class Commander implements CommandExecutor {
         }
 
         switch (sub) {
+            case "op", "menu", "items" -> {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(getHead() + "§c仅玩家可打开 OP 物品库界面。");
+                    return true;
+                }
+                OpItemsGuiHolder.open(player, OpItemsGuiHolder.Category.GEMS, 0);
+            }
             case "reload" -> {
                 ScriptRunnable.enableScript = false;
                 NewCustomCuiLianPro.enableConfig();
                 NewCustomCuiLianPro.setRecipe();
                 ScriptRunnable.resetCaches();
-                sender.sendMessage(getHead() + "§a插件配置与宝石系统重载成功！");
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    NativeAttributeEngine.syncEntity(p);
+                }
+                sender.sendMessage(getHead() + "§a插件配置、属性引擎与宝石系统重载成功！");
             }
             case "stones" -> listStones(sender);
             case "protects" -> listProtects(sender);
@@ -92,17 +101,18 @@ public class Commander implements CommandExecutor {
     private void sendHelp(CommandSender sender) {
         sender.sendMessage("§c§m§l  §6§m§l  §e§m§l  §a§m§l  §b§m§l  §e§l淬炼与宝石§b§m§l  §a§m§l  §e§m§l  §6§m§l  §c§m§l  ");
         sender.sendMessage("§a§l▏   §e/cuilian moveLevel §7- 打开淬炼移星界面");
-        sender.sendMessage("§a§l▏   §e/cuilian gem §7- 打开装备宝石镶嵌 / 打孔界面");
         sender.sendMessage("§a§l▏   §e/cuilian gem remove §7- 打开手持装备宝石拆卸界面");
+        sender.sendMessage("§7    (宝石镶嵌、5合1粘合与保护符均在背包内左键拿起直接右键目标完成)");
 
         if (isAdmin(sender)) {
+            sendClickableHelp(sender, "§b§l▏   §b/cuilian op §7- 打开 OP 全物品库（查看/拿取所有淬炼石、保护符、宝石与道具）",
+                    "/cuilian op", "§a点击打开 OP 全物品库");
             sender.sendMessage("§c§l▏   §c/cuilian set <等级> §7- 设置手持装备淬炼等级 (0为清除)");
             sendClickableHelp(sender, "§c§l▏   §c/cuilian stone <淬炼石ID> <数量> <玩家>", "/cuilian stones", "§c点击查看所有淬炼石");
             sendClickableHelp(sender, "§c§l▏   §c/cuilian protect <保护符等级> <数量> <玩家>", "/cuilian protects", "§c点击查看所有保护符");
             sendClickableHelp(sender, "§c§l▏   §c/cuilian gem give <宝石ID> <数量> <玩家>", "/cuilian gem list", "§b点击查看所有宝石");
-            sender.sendMessage("§c§l▏   §c/cuilian gem punch <数量> <玩家> §7- 给予装备打孔符");
+            sender.sendMessage("§c§l▏   §c/cuilian gem binder <数量> <玩家> §7- 给予宝石粘合剂（5合1升阶）");
             sender.sendMessage("§c§l▏   §c/cuilian gem extractor <数量> <玩家> §7- 给予宝石拆卸符");
-            sender.sendMessage("§c§l▏   §c/cuilian gem addslot [数量] §7- 直接为手持装备增加宝石槽位");
             sender.sendMessage("§c§l▏   §c/cuilian reload §7- 重载全部配置");
         }
         sender.sendMessage("§c§m§l  §6§m§l  §e§m§l  §a§m§l  §b§m§l  §e§l淬炼与宝石§b§m§l  §a§m§l  §e§m§l  §6§m§l  §c§m§l  ");
@@ -124,18 +134,13 @@ public class Commander implements CommandExecutor {
             sender.sendMessage(Message.GEM_DISABLED);
             return true;
         }
-        // /cuilian gem
         if (args.length == 1) {
-            if (!(sender instanceof Player player)) {
-                sender.sendMessage(getHead() + "§c仅玩家可打开宝石镶嵌界面。");
-                return true;
-            }
-            GemInlayGuiHolder.open(player);
+            sender.sendMessage(Message.GEM_USAGE_TIP);
+            sender.sendMessage(Message.GEM_BIND_USAGE_TIP);
             return true;
         }
 
         String gemSub = args[1].toLowerCase();
-        // /cuilian gem remove
         if (gemSub.equals("remove") || gemSub.equals("extract")) {
             if (!(sender instanceof Player player)) {
                 sender.sendMessage(getHead() + "§c仅玩家可打开宝石拆卸界面。");
@@ -145,7 +150,6 @@ public class Commander implements CommandExecutor {
             return true;
         }
 
-        // Admin gem subcommands
         if (!isAdmin(sender)) {
             sender.sendMessage(getHead() + "§c你没有权限执行此宝石管理指令。");
             return true;
@@ -153,10 +157,9 @@ public class Commander implements CommandExecutor {
 
         switch (gemSub) {
             case "list" -> {
-                sender.sendMessage("§b§m§l  §3§m§l  §9§m§l  §e§l宝石列表§9§m§l  §3§m§l  §b§m§l  ");
+                sender.sendMessage("§b§m§l  §3§m§l  §9§m§l  §e§l宝石列表 (共 " + Gem.gems.size() + " 颗)§9§m§l  §3§m§l  §b§m§l  ");
                 for (Map.Entry<String, Gem> entry : Gem.gems.entrySet()) {
-                    String line = "§b§l▏   §f" + entry.getKey() + " §7- " + entry.getValue().name
-                            + " §7(成功率 " + entry.getValue().chance + "%)";
+                    String line = "§b§l▏   §f" + entry.getKey() + " §7- " + entry.getValue().name;
                     if (sender instanceof Player player) {
                         TextComponent tc = new TextComponent(line);
                         tc.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
@@ -168,7 +171,6 @@ public class Commander implements CommandExecutor {
                         sender.sendMessage(line);
                     }
                 }
-                sender.sendMessage("§b§m§l  §3§m§l  §9§m§l  §e§l宝石列表§9§m§l  §3§m§l  §b§m§l  ");
             }
             case "give" -> {
                 if (args.length < 5) {
@@ -193,9 +195,9 @@ public class Commander implements CommandExecutor {
                 giveItemSafely(target, gem.createItemStack(amount));
                 sender.sendMessage(getHead() + "§a已给予 §e" + target.getName() + " §a" + amount + " 颗 " + gem.name);
             }
-            case "punch" -> {
+            case "binder" -> {
                 if (args.length < 4) {
-                    sender.sendMessage(getHead() + "§c用法: /cuilian gem punch <数量> <玩家>");
+                    sender.sendMessage(getHead() + "§c用法: /cuilian gem binder <数量> <玩家>");
                     return true;
                 }
                 int amount = parsePositiveInt(args[2]);
@@ -208,13 +210,13 @@ public class Commander implements CommandExecutor {
                     sender.sendMessage(getHead() + "§c玩家不在线: " + args[3]);
                     return true;
                 }
-                ItemStack punch = Gem.createPunchItem(amount);
-                if (punch == null) {
-                    sender.sendMessage(getHead() + "§c打孔符未在 gem.yml 中配置！");
+                ItemStack binder = Gem.createBinderItem(amount);
+                if (binder == null) {
+                    sender.sendMessage(getHead() + "§c宝石粘合剂未在 gem.yml 中配置！");
                     return true;
                 }
-                giveItemSafely(target, punch);
-                sender.sendMessage(getHead() + "§a已给予 §e" + target.getName() + " §a" + amount + " 个装备打孔符。");
+                giveItemSafely(target, binder);
+                sender.sendMessage(getHead() + "§a已给予 §e" + target.getName() + " §a" + amount + " 个宝石粘合剂。");
             }
             case "extractor", "removetool" -> {
                 if (args.length < 4) {
@@ -238,27 +240,6 @@ public class Commander implements CommandExecutor {
                 }
                 giveItemSafely(target, tool);
                 sender.sendMessage(getHead() + "§a已给予 §e" + target.getName() + " §a" + amount + " 个宝石拆卸符。");
-            }
-            case "addslot" -> {
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage(getHead() + "§c仅玩家可使用此指令。");
-                    return true;
-                }
-                int add = args.length >= 3 ? parsePositiveInt(args[2]) : 1;
-                if (add <= 0) {
-                    sender.sendMessage(getHead() + "§c数量必须为正整数。");
-                    return true;
-                }
-                ItemStack hand = ItemUtil.getItemInMainHand(player);
-                if (!CuiLianAPI.canCuiLian(hand)) {
-                    sender.sendMessage(getHead() + "§c手持物品不可淬炼/打孔。");
-                    return true;
-                }
-                int current = GemAPI.getSlotCount(hand);
-                int targetSlots = Math.min(NewCustomCuiLianPro.gemMaxSlots, current + add);
-                GemAPI.setSlotCount(hand, targetSlots);
-                ItemUtil.setItemInMainHand(player, hand);
-                sender.sendMessage(getHead() + "§a已将手持装备宝石槽位设置为 §b" + targetSlots + "/" + NewCustomCuiLianPro.gemMaxSlots);
             }
             default -> sendHelp(sender);
         }
@@ -338,6 +319,7 @@ public class Commander implements CommandExecutor {
             return;
         }
         ItemUtil.setItemInMainHand(player, CuiLianAPI.setItemLevel(hand, level));
+        NativeAttributeEngine.syncEntity(player);
         sender.sendMessage(getHead() + "§a已将手持装备淬炼等级设置为: " + (level != null ? level.getFirstLore() : "§70星(已清除)"));
     }
 
@@ -361,7 +343,6 @@ public class Commander implements CommandExecutor {
             sender.sendMessage(getHead() + "§c数量必须为正整数！");
             return;
         }
-        // Always clone so we never mutate Stone.item singleton!
         ItemStack give = stone.item.clone();
         give.setAmount(amount);
         giveItemSafely(target, give);
@@ -395,7 +376,6 @@ public class Commander implements CommandExecutor {
             sender.sendMessage(getHead() + "§c数量必须为正整数！");
             return;
         }
-        // Always clone so we never mutate ProtectRune.item singleton!
         ItemStack give = level.protectRune.item.clone();
         give.setAmount(amount);
         giveItemSafely(target, give);

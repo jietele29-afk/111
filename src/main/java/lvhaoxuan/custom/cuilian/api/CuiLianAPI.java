@@ -6,9 +6,6 @@ import lvhaoxuan.custom.cuilian.object.Level;
 import lvhaoxuan.custom.cuilian.object.ProtectRune;
 import lvhaoxuan.custom.cuilian.object.Stone;
 import lvhaoxuan.custom.cuilian.util.ItemUtil;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.title.TitlePart;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
@@ -30,6 +27,9 @@ public class CuiLianAPI {
         return NewCustomCuiLianPro.typesInBag.containsKey(item.getType());
     }
 
+    /**
+     * Tempers an equipment item using a CuiLian Stone. Chat feedback only (no Title popup).
+     */
     public static ItemStack cuilian(Stone stone, ItemStack item, Player p) {
         if (stone == null || !canCuiLian(item)) {
             return item;
@@ -49,10 +49,6 @@ public class CuiLianAPI {
         if (success) {
             item = setItemLevel(item, targetLevel);
             String lvText = targetLevel.getFirstLore();
-            if (p != null) {
-                p.sendTitlePart(TitlePart.TITLE, Component.text("淬炼成功", NamedTextColor.GREEN));
-                p.sendTitlePart(TitlePart.SUBTITLE, Component.text(lvText));
-            }
             sendMessage = Message.SUCCESS.replace("%s", lvText);
             if (targetLevel.value >= 5) {
                 String playerName = p != null ? p.getDisplayName() : "未知玩家";
@@ -68,7 +64,6 @@ public class CuiLianAPI {
             Level protectRune = Level.byProtectRune(item);
 
             if (protectRune != null && protectRune.value <= basicLevel) {
-                // Protect rune is active: never drop below protectRune.value
                 int maxAllowedDrop = basicLevel - protectRune.value;
                 if (maxAllowedDrop <= dropLevel) {
                     dropLevel = maxAllowedDrop > 0 ? ItemUtil.randomInt(0, maxAllowedDrop) : 0;
@@ -77,23 +72,14 @@ public class CuiLianAPI {
                 Level toLevel = Level.levels.get(finalLevelNum);
                 item = setItemLevel(item, toLevel);
                 String lvText = toLevel != null ? toLevel.getFirstLore() : "§c§l淬炼消失";
-                if (p != null) {
-                    p.sendTitlePart(TitlePart.TITLE, Component.text("淬炼失败", NamedTextColor.RED));
-                    p.sendTitlePart(TitlePart.SUBTITLE, Component.text(lvText));
-                }
                 sendMessage = Message.CUILIAN_FAIL_PROTECT_RUNE
                         .replace("%s", lvText)
                         .replace("%d", String.valueOf(dropLevel));
             } else {
-                // No protect rune or protect rune requirement not met
                 int finalLevelNum = Math.max(0, basicLevel - dropLevel);
                 Level toLevel = Level.levels.get(finalLevelNum);
                 item = setItemLevel(item, toLevel);
                 String lvText = toLevel != null ? toLevel.getFirstLore() : "§c§l淬炼消失";
-                if (p != null) {
-                    p.sendTitlePart(TitlePart.TITLE, Component.text("淬炼失败", NamedTextColor.RED));
-                    p.sendTitlePart(TitlePart.SUBTITLE, Component.text(lvText));
-                }
                 sendMessage = Message.CUILIAN_FAIL
                         .replace("%s", lvText)
                         .replace("%d", String.valueOf(dropLevel));
@@ -116,7 +102,6 @@ public class CuiLianAPI {
             return item;
         }
 
-        // Capture existing protect rune before cleaning lore
         Level protectRuneLevel = Level.byProtectRune(item);
 
         setDisplayName(item.getType(), meta, basicLevel);
@@ -126,7 +111,6 @@ public class CuiLianAPI {
         lore = replaceLore(lore);
         lore = cleanLevel(lore);
         lore = cleanProtectRune(lore);
-        // Clean gem lore temporarily so it is cleanly re-appended at the bottom via GemAPI
         lore = GemAPI.cleanGemLore(lore);
 
         if (level != null) {
@@ -154,7 +138,6 @@ public class CuiLianAPI {
         meta.setLore(lore);
         item.setItemMeta(meta);
 
-        // Re-render any gem sockets/gems cleanly below tempering lore
         GemAPI.refreshGemLore(item);
         return item;
     }
@@ -239,7 +222,7 @@ public class CuiLianAPI {
             for (String replace : NewCustomCuiLianPro.replaceLore) {
                 if (replace != null && !replace.isEmpty() && line.contains(replace)) {
                     iterator.remove();
-                    break; // Prevent IllegalStateException when multiple rules match
+                    break;
                 }
             }
         }

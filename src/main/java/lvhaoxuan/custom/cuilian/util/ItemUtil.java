@@ -3,9 +3,11 @@ package lvhaoxuan.custom.cuilian.util;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -18,9 +20,6 @@ public final class ItemUtil {
     private ItemUtil() {
     }
 
-    /**
-     * Returns true if the ItemStack is non-null and not AIR.
-     */
     public static boolean isNotEmpty(ItemStack item) {
         return item != null && item.getType() != Material.AIR && item.getAmount() > 0;
     }
@@ -39,7 +38,27 @@ public final class ItemUtil {
         return result;
     }
 
+    /**
+     * Adds a glowing enchantment glint without showing the enchantment name in lore.
+     */
+    public static ItemStack addGlow(ItemStack item) {
+        if (!isNotEmpty(item)) {
+            return item;
+        }
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.addEnchant(Enchantment.DURABILITY, 1, true);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
     public static ItemStack readItemStack(YamlConfiguration config, String path) {
+        return readItemStack(config, path, true);
+    }
+
+    public static ItemStack readItemStack(YamlConfiguration config, String path, boolean defaultGlow) {
         if (config == null || !config.contains(path)) {
             return null;
         }
@@ -62,6 +81,11 @@ public final class ItemUtil {
             int cmd = config.getInt(path + ".CustomModelData", 0);
             if (cmd > 0) {
                 meta.setCustomModelData(cmd);
+            }
+            boolean glow = config.getBoolean(path + ".Glow", defaultGlow);
+            if (glow) {
+                meta.addEnchant(Enchantment.DURABILITY, 1, true);
+                meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             }
             item.setItemMeta(meta);
         }
@@ -94,20 +118,21 @@ public final class ItemUtil {
         return eq != null ? eq.getItemInOffHand() : null;
     }
 
-    public static boolean inventoryHasSimilar(Inventory inv, ItemStack target, int requiredAmount) {
-        if (inv == null || !isNotEmpty(target) || requiredAmount <= 0) {
-            return false;
+    public static int countSimilar(Inventory inv, ItemStack target) {
+        if (inv == null || !isNotEmpty(target)) {
+            return 0;
         }
         int found = 0;
         for (ItemStack slot : inv.getContents()) {
             if (isNotEmpty(slot) && slot.isSimilar(target)) {
                 found += slot.getAmount();
-                if (found >= requiredAmount) {
-                    return true;
-                }
             }
         }
-        return false;
+        return found;
+    }
+
+    public static boolean inventoryHasSimilar(Inventory inv, ItemStack target, int requiredAmount) {
+        return countSimilar(inv, target) >= requiredAmount;
     }
 
     public static boolean inventoryRemoveSimilar(Inventory inv, ItemStack target, int amountToRemove) {

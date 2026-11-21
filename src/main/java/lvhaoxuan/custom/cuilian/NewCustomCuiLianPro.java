@@ -4,6 +4,7 @@ import lvhaoxuan.custom.cuilian.api.GemAPI;
 import lvhaoxuan.custom.cuilian.commander.Commander;
 import lvhaoxuan.custom.cuilian.commander.CuiLianTabCompleter;
 import lvhaoxuan.custom.cuilian.hook.AttributeHook;
+import lvhaoxuan.custom.cuilian.listener.CombatAttributeListener;
 import lvhaoxuan.custom.cuilian.listener.FurnaceListener;
 import lvhaoxuan.custom.cuilian.listener.GemListener;
 import lvhaoxuan.custom.cuilian.listener.MoveLevelListener;
@@ -12,6 +13,7 @@ import lvhaoxuan.custom.cuilian.loader.Loader;
 import lvhaoxuan.custom.cuilian.message.Message;
 import lvhaoxuan.custom.cuilian.movelevel.MoveLevelHandle;
 import lvhaoxuan.custom.cuilian.object.Gem;
+import lvhaoxuan.custom.cuilian.runnable.ParticleEffectRunnable;
 import lvhaoxuan.custom.cuilian.runnable.ScriptRunnable;
 import lvhaoxuan.custom.cuilian.runnable.SyncEffectRunnable;
 import lvhaoxuan.custom.cuilian.util.ItemUtil;
@@ -19,6 +21,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -35,26 +38,30 @@ import java.util.Set;
 
 public class NewCustomCuiLianPro extends JavaPlugin {
 
+    public static boolean nativeAttributeEngine = true;
     public static String PROTECT_RUNE_JUDGE = "§a§l保护符: ";
     public static String LEVEL_JUDGE = "§e§l淬炼属性: ";
     public static NewCustomCuiLianPro ins;
     public static HashMap<Material, String> typesInBag = new HashMap<>();
     public static List<ItemType> types = new ArrayList<>();
     public static boolean otherEntitySuitEffect = false;
-    public static boolean judgeOffHand = true;
-    public static int displayNameFormat = 0;
+    public static boolean judgeOffHand = false;
+    public static int displayNameFormat = 1;
     public static List<String> replaceLore = new ArrayList<>();
 
-    // Gem socketing config fields
+    // High-star particle config
+    public static boolean particleEnable = true;
+    public static int particleMinLevel = 6;
+
+    // Gem socketing config
     public static boolean gemEnable = true;
     public static int gemMaxSlots = 3;
-    public static int gemDefaultSlots = 1;
     public static String GEM_JUDGE = "§b§l宝石属性: ";
     public static String GEM_UNDER_LINE = "§b§l§m  §3§l§m  §9§l§m  §e§l宝石镶嵌§9§l§m  §3§l§m  §b§l§m  ";
     public static String GEM_SLOT_EMPTY_LORE = "§7◇ 空宝石槽位";
     public static String GEM_SLOT_FILLED_PREFIX = "§b◆ ";
-    public static String gemInlayInvTitle = "§8装备宝石镶嵌";
     public static String gemRemoveInvTitle = "§8装备宝石拆卸";
+    public static String opItemsInvTitle = "§8[OP] 淬炼与宝石全物品库";
 
     private static final Set<NamespacedKey> registeredRecipeKeys = new HashSet<>();
 
@@ -79,6 +86,7 @@ public class NewCustomCuiLianPro extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ProtectRuneListener(), this);
         getServer().getPluginManager().registerEvents(new MoveLevelListener(), this);
         getServer().getPluginManager().registerEvents(new GemListener(), this);
+        getServer().getPluginManager().registerEvents(new CombatAttributeListener(), this);
         getServer().getPluginManager().registerEvents(new Listener() {
             @EventHandler
             public void onQuit(PlayerQuitEvent e) {
@@ -88,16 +96,18 @@ public class NewCustomCuiLianPro extends JavaPlugin {
 
         setRecipe();
 
-        // Run synchronously on the main thread (Paper 1.20.4 thread-safe!)
+        // Main-thread schedulers (Paper 1.20.4 thread-safe)
+        Bukkit.getScheduler().runTaskTimer(this, new ParticleEffectRunnable(), 20L, 3L);
         Bukkit.getScheduler().runTaskTimer(this, new ScriptRunnable(), 20L, 4L);
         Bukkit.getScheduler().runTaskTimer(this, new SyncEffectRunnable(), 20L, 10L);
 
-        getServer().getConsoleSender().sendMessage("§a[" + getName() + "] §a加载完成！");
+        getServer().getConsoleSender().sendMessage("§a[" + getName() + "] §a加载完成！原生属性引擎: "
+                + (nativeAttributeEngine ? "已开启" : "已关闭"));
     }
 
     @Override
     public void onDisable() {
-        for (org.bukkit.entity.Player p : Bukkit.getOnlinePlayers()) {
+        for (Player p : Bukkit.getOnlinePlayers()) {
             SyncEffectRunnable.cleanupEntity(p);
         }
         clearRegisteredRecipes();
@@ -123,10 +133,6 @@ public class NewCustomCuiLianPro extends JavaPlugin {
         registeredRecipeKeys.clear();
     }
 
-    /**
-     * Registers one modern NamespacedKey FurnaceRecipe per Material.
-     * In Minecraft 1.13–1.20.4+, a single Material recipe matches all durabilities automatically.
-     */
     public static void setRecipe() {
         clearRegisteredRecipes();
         Set<Material> seen = new HashSet<>();

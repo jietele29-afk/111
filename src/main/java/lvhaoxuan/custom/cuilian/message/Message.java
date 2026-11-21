@@ -14,9 +14,9 @@ import java.util.logging.Level;
 
 public class Message {
 
-    public static String MUST_ADD_IN_BAG = "§f[§d淬炼保护符§f]§c请在背包内右键";
+    public static String MUST_ADD_IN_BAG = "§f[§d淬炼保护符§f]§c请在背包内操作";
     public static String CANCEL_ADD = "§f[§d淬炼保护符§f]§c你取消了本次淬炼保护!";
-    public static String CAN_NOT_ADD = "§f[§d淬炼保护符§f]§c这个物品不能够进行淬炼保护.";
+    public static String CAN_NOT_ADD = "§f[§d淬炼保护符§f]§c这个物品不能够进行淬炼保护或淬炼等级不足.";
     public static String ADD_SUCCESS = "§a§l附加淬炼保护成功,§d成功对装备附加:%s";
     public static List<String> ADD_MESSAGE = new ArrayList<>();
     public static String SUCCESS = "§a§l淬炼成功,§e装备目前为：%s";
@@ -30,8 +30,8 @@ public class Message {
 
     // Gem messages
     public static String GEM_DISABLED = "§f[§b宝石镶嵌§f]§c宝石镶嵌系统当前未开启。";
-    public static String GEM_CAN_NOT_INLAY = "§f[§b宝石镶嵌§f]§c该装备无法镶嵌此宝石。";
-    public static String GEM_NO_EMPTY_SLOT = "§f[§b宝石镶嵌§f]§c该装备没有空余的宝石槽位，请先使用打孔符开孔！";
+    public static String GEM_CAN_NOT_INLAY = "§f[§b宝石镶嵌§f]§c该物品无法镶嵌此宝石。";
+    public static String GEM_NO_EMPTY_SLOT = "§f[§b宝石镶嵌§f]§c该装备的宝石槽位已满！";
     public static String GEM_LEVEL_TOO_LOW = "§f[§b宝石镶嵌§f]§c该宝石需要装备淬炼达到 §e%d §c星以上才可镶嵌！";
     public static String GEM_TYPE_NOT_ALLOWED = "§f[§b宝石镶嵌§f]§c此宝石无法镶嵌在该部位装备上！";
     public static String GEM_MAX_SAME_REACHED = "§f[§b宝石镶嵌§f]§c该装备已镶嵌达到同类宝石数量上限（最多 %d 颗）！";
@@ -39,11 +39,12 @@ public class Message {
     public static String GEM_INLAY_FAIL = "§f[§b宝石镶嵌§f]§c§l镶嵌失败！§7宝石已碎裂消散。";
     public static String GEM_INLAY_FAIL_KEEP = "§f[§b宝石镶嵌§f]§c§l镶嵌失败！§e幸运的是宝石未损坏。";
     public static String GEM_INLAY_FAIL_DESTROY_EQUIP = "§f[§b宝石镶嵌§f]§4§l镶嵌失败！§c装备在冲击中损毁了！";
-    public static List<String> GEM_SELECT_START = new ArrayList<>();
-    public static String GEM_SELECT_CANCEL = "§f[§b宝石镶嵌§f]§c已取消本次宝石/打孔操作。";
-    public static String GEM_PUNCH_SUCCESS = "§f[§b装备打孔§f]§a§l打孔成功！§e装备当前宝石槽位: §b%d/%d";
-    public static String GEM_PUNCH_FAIL = "§f[§b装备打孔§f]§c§l打孔失败！§7打孔符已消耗。";
-    public static String GEM_PUNCH_MAX = "§f[§b装备打孔§f]§c该装备的宝石槽位已达到上限（%d 孔）！";
+    public static String GEM_USAGE_TIP = "§f[§b宝石镶嵌§f]§7提示: 在背包内左键拿起宝石，直接右键点击目标装备即可一键镶嵌！";
+    public static String GEM_BIND_SUCCESS = "§f[§d宝石粘合§f]§a§l粘合成功！§e消耗 5 颗同级宝石，合成了 %s §e！";
+    public static String GEM_BIND_FAIL = "§f[§d宝石粘合§f]§c§l粘合失败！§7宝石粘合剂已消耗。";
+    public static String GEM_BIND_NOT_ENOUGH = "§f[§d宝石粘合§f]§c背包内同级宝石数量不足 5 颗，无法粘合升级！";
+    public static String GEM_BIND_MAX_LEVEL = "§f[§d宝石粘合§f]§e该宝石已达到最高等级（五级），无法继续粘合！";
+    public static String GEM_BIND_USAGE_TIP = "§f[§d宝石粘合§f]§7提示: 左键拿起宝石粘合剂，直接右键点击背包内的宝石即可 5 合 1 升级！";
     public static String GEM_REMOVE_SUCCESS = "§f[§b宝石拆卸§f]§a§l拆卸成功！§e已将 %s §e完好取回背包。";
     public static String GEM_REMOVE_FAIL = "§f[§b宝石拆卸§f]§c§l拆卸失败！§7拆卸符已消耗，宝石仍保留在装备上。";
     public static String GEM_REMOVE_NO_TOOL = "§f[§b宝石拆卸§f]§c你的背包里没有宝石拆卸符！";
@@ -84,11 +85,12 @@ public class Message {
             GEM_INLAY_FAIL = ItemUtil.color(cfg.getString("GEM_INLAY_FAIL", GEM_INLAY_FAIL));
             GEM_INLAY_FAIL_KEEP = ItemUtil.color(cfg.getString("GEM_INLAY_FAIL_KEEP", GEM_INLAY_FAIL_KEEP));
             GEM_INLAY_FAIL_DESTROY_EQUIP = ItemUtil.color(cfg.getString("GEM_INLAY_FAIL_DESTROY_EQUIP", GEM_INLAY_FAIL_DESTROY_EQUIP));
-            GEM_SELECT_START = ItemUtil.colorList(cfg.getStringList("GEM_SELECT_START"));
-            GEM_SELECT_CANCEL = ItemUtil.color(cfg.getString("GEM_SELECT_CANCEL", GEM_SELECT_CANCEL));
-            GEM_PUNCH_SUCCESS = ItemUtil.color(cfg.getString("GEM_PUNCH_SUCCESS", GEM_PUNCH_SUCCESS));
-            GEM_PUNCH_FAIL = ItemUtil.color(cfg.getString("GEM_PUNCH_FAIL", GEM_PUNCH_FAIL));
-            GEM_PUNCH_MAX = ItemUtil.color(cfg.getString("GEM_PUNCH_MAX", GEM_PUNCH_MAX));
+            GEM_USAGE_TIP = ItemUtil.color(cfg.getString("GEM_USAGE_TIP", GEM_USAGE_TIP));
+            GEM_BIND_SUCCESS = ItemUtil.color(cfg.getString("GEM_BIND_SUCCESS", GEM_BIND_SUCCESS));
+            GEM_BIND_FAIL = ItemUtil.color(cfg.getString("GEM_BIND_FAIL", GEM_BIND_FAIL));
+            GEM_BIND_NOT_ENOUGH = ItemUtil.color(cfg.getString("GEM_BIND_NOT_ENOUGH", GEM_BIND_NOT_ENOUGH));
+            GEM_BIND_MAX_LEVEL = ItemUtil.color(cfg.getString("GEM_BIND_MAX_LEVEL", GEM_BIND_MAX_LEVEL));
+            GEM_BIND_USAGE_TIP = ItemUtil.color(cfg.getString("GEM_BIND_USAGE_TIP", GEM_BIND_USAGE_TIP));
             GEM_REMOVE_SUCCESS = ItemUtil.color(cfg.getString("GEM_REMOVE_SUCCESS", GEM_REMOVE_SUCCESS));
             GEM_REMOVE_FAIL = ItemUtil.color(cfg.getString("GEM_REMOVE_FAIL", GEM_REMOVE_FAIL));
             GEM_REMOVE_NO_TOOL = ItemUtil.color(cfg.getString("GEM_REMOVE_NO_TOOL", GEM_REMOVE_NO_TOOL));

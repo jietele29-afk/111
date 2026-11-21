@@ -3,6 +3,7 @@ package lvhaoxuan.custom.cuilian.runnable;
 import lvhaoxuan.custom.cuilian.NewCustomCuiLianPro;
 import lvhaoxuan.custom.cuilian.api.CuiLianAPI;
 import lvhaoxuan.custom.cuilian.api.GemAPI;
+import lvhaoxuan.custom.cuilian.engine.NativeAttributeEngine;
 import lvhaoxuan.custom.cuilian.hook.AttributeHook;
 import lvhaoxuan.custom.cuilian.message.Message;
 import lvhaoxuan.custom.cuilian.object.Level;
@@ -21,7 +22,8 @@ import java.util.UUID;
 
 /**
  * Runs synchronously on the main thread every 10 ticks to synchronize:
- * - Tempering SuitEffect potion effects & AttributePlus/SX-Attribute bonuses
+ * - NativeAttributeEngine stats (MaxHealth, Armor, Toughness, MoveSpeed, AttackSpeed, KnockbackResist)
+ * - Tempering SuitEffect potion effects & external AP/SX hooks
  * - Socketed Gem passive potion effects
  */
 public class SyncEffectRunnable implements Runnable {
@@ -33,6 +35,7 @@ public class SyncEffectRunnable implements Runnable {
             return;
         }
         UUID uuid = entity.getUniqueId();
+        NativeAttributeEngine.clearEntity(entity);
         if (activeSuitMap.remove(uuid) != null) {
             AttributeHook.clearSuitAttributes(entity);
         }
@@ -54,12 +57,15 @@ public class SyncEffectRunnable implements Runnable {
             return;
         }
 
-        // 1) Apply passive potion effects from socketed gems on equipped armor/weapons
+        // 1) Sync built-in native Minecraft AttributeModifiers (makes all items take real effect!)
+        NativeAttributeEngine.syncEntity(le);
+
+        // 2) Apply passive potion effects from socketed gems on equipped armor/weapons
         List<String> gemPotions = GemAPI.collectEquippedGemPotions(
                 eq.getArmorContents(), eq.getItemInMainHand(), eq.getItemInOffHand());
         applyPotionStrings(le, gemPotions);
 
-        // 2) Apply tempering suit effect
+        // 3) Apply tempering suit effect
         UUID uuid = le.getUniqueId();
         Level minLevel = CuiLianAPI.getMinLevel(le, eq);
         Level previousLevel = activeSuitMap.get(uuid);
