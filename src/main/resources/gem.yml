@@ -1,0 +1,264 @@
+# ==================== 宝石辅助道具配置 ====================
+Tools:
+  BinderItem:
+    Name: "§d§l宝石粘合剂"
+    Type: SLIME_BALL
+    CustomModelData: 0
+    Chance: 100.0
+    NeedAmount: 5
+    Lore:
+      - "§e用法：§a左键拿起粘合剂，直接右键点击背包内的宝石"
+      - "§e作用：§a消耗 5 颗同级宝石，粘合升级为 1 颗下一级宝石"
+      - "§e最高等级：§b五级宝石"
+  RemoveItem:
+    Name: "§b§l宝石拆卸符"
+    Type: SHEARS
+    CustomModelData: 0
+    Lore:
+      - "§e用法：§a左键拿起拆卸符，右键点击已镶嵌宝石的装备（或 /cuilian gem remove）"
+      - "§e作用：§a将装备上已镶嵌的宝石完好取回背包"
+
+# ==================== 10种诗意宝石家族（每种1~5级，共50颗非方块图标宝石） ====================
+# 每种宝石自动生成 1~5 级（例如 qingling_1 ~ qingling_5），每级属性线性平衡递增
+# 支持的内置原生生效属性词条：
+#   物理伤害、物理防御、生命上限、盔甲韧性、移动速度(%)、攻击速度(%)、暴击几率(%)、暴击伤害(%)、吸血(%)、闪避几率(%)、伤害反弹(%)、抗击退(%)
+GemFamilies:
+  qingling:
+    DisplayName: "§a§l青灵石"
+    Type: EMERALD
+    CustomModelData: 0
+    Chance: 100.0
+    FailDestroyGem: false
+    FailDestroyEquip: false
+    MaxSameGem: 2
+    MinCuiLianLevel: 0
+    RemoveChance: 100.0
+    AllowTypes: [Helmet, Chestplate, Leggings, Boots]
+    Description: "§7蕴含草木生机之灵气，穿戴可温和滋养气血"
+    Levels:
+      1:
+        Attribute: ["§a生命上限: §e2"]
+      2:
+        Attribute: ["§a生命上限: §e4"]
+      3:
+        Attribute: ["§a生命上限: §e6"]
+      4:
+        Attribute: ["§a生命上限: §e8"]
+      5:
+        Attribute: ["§a生命上限: §e10"]
+
+  chiyan:
+    DisplayName: "§c§l赤炎石"
+    Type: BLAZE_POWDER
+    CustomModelData: 0
+    Chance: 100.0
+    FailDestroyGem: false
+    FailDestroyEquip: false
+    MaxSameGem: 2
+    MinCuiLianLevel: 0
+    RemoveChance: 100.0
+    AllowTypes: [Hand]
+    Description: "§7熔火凝结的赤红晶石，赋予兵刃炽烈锋芒"
+    Levels:
+      1:
+        Attribute: ["§c物理伤害: §e1"]
+      2:
+        Attribute: ["§c物理伤害: §e2"]
+      3:
+        Attribute: ["§c物理伤害: §e3"]
+      4:
+        Attribute: ["§c物理伤害: §e4"]
+      5:
+        Attribute: ["§c物理伤害: §e5"]
+
+  shuixi:
+    DisplayName: "§b§l水夕石"
+    Type: PRISMARINE_CRYSTALS
+    CustomModelData: 0
+    Chance: 100.0
+    FailDestroyGem: false
+    FailDestroyEquip: false
+    MaxSameGem: 2
+    MinCuiLianLevel: 0
+    RemoveChance: 100.0
+    AllowTypes: [Helmet, Chestplate, Leggings, Boots]
+    Description: "§7如暮色潮汐般灵动轻盈，受击时有几率灵巧闪避"
+    Levels:
+      1:
+        Attribute: ["§b闪避几率: §e3%"]
+      2:
+        Attribute: ["§b闪避几率: §e6%"]
+      3:
+        Attribute: ["§b闪避几率: §e9%"]
+      4:
+        Attribute: ["§b闪避几率: §e12%"]
+      5:
+        Attribute: ["§b闪避几率: §e15%"]
+
+  xuantie:
+    DisplayName: "§9§l玄铁石"
+    Type: LAPIS_LAZULI
+    CustomModelData: 0
+    Chance: 100.0
+    FailDestroyGem: false
+    FailDestroyEquip: false
+    MaxSameGem: 2
+    MinCuiLianLevel: 0
+    RemoveChance: 100.0
+    AllowTypes: [Helmet, Chestplate, Leggings, Boots]
+    Description: "§7深海玄铁淬炼而成的护心晶石，稳固提升防御力"
+    Levels:
+      1:
+        Attribute: ["§9物理防御: §e1"]
+      2:
+        Attribute: ["§9物理防御: §e2"]
+      3:
+        Attribute: ["§9物理防御: §e3"]
+      4:
+        Attribute: ["§9物理防御: §e4"]
+      5:
+        Attribute: ["§9物理防御: §e5"]
+
+  pojun:
+    DisplayName: "§e§l破军石"
+    Type: DIAMOND
+    CustomModelData: 0
+    Chance: 100.0
+    FailDestroyGem: false
+    FailDestroyEquip: false
+    MaxSameGem: 2
+    MinCuiLianLevel: 0
+    RemoveChance: 100.0
+    AllowTypes: [Hand]
+    Description: "§7锋锐无匹的星陨晶钻，提升武器会心一击几率"
+    Levels:
+      1:
+        Attribute: ["§e暴击几率: §e3%"]
+      2:
+        Attribute: ["§e暴击几率: §e6%"]
+      3:
+        Attribute: ["§e暴击几率: §e9%"]
+      4:
+        Attribute: ["§e暴击几率: §e12%"]
+      5:
+        Attribute: ["§e暴击几率: §e15%"]
+
+  xinghui:
+    DisplayName: "§f§l星辉石"
+    Type: NETHER_STAR
+    CustomModelData: 0
+    Chance: 100.0
+    FailDestroyGem: false
+    FailDestroyEquip: false
+    MaxSameGem: 2
+    MinCuiLianLevel: 0
+    RemoveChance: 100.0
+    AllowTypes: [Hand]
+    Description: "§7汇聚星河微光，令挥击迅如流星"
+    Levels:
+      1:
+        Attribute: ["§f攻击速度: §e4%"]
+      2:
+        Attribute: ["§f攻击速度: §e8%"]
+      3:
+        Attribute: ["§f攻击速度: §e12%"]
+      4:
+        Attribute: ["§f攻击速度: §e16%"]
+      5:
+        Attribute: ["§f攻击速度: §e20%"]
+
+  xuepo:
+    DisplayName: "§4§l血珀石"
+    Type: REDSTONE
+    CustomModelData: 0
+    Chance: 100.0
+    FailDestroyGem: false
+    FailDestroyEquip: false
+    MaxSameGem: 2
+    MinCuiLianLevel: 0
+    RemoveChance: 100.0
+    AllowTypes: [Hand]
+    Description: "§7暗红琥珀结晶，攻击命中时汲取部分生命回复自身"
+    Levels:
+      1:
+        Attribute: ["§4吸血: §e2%"]
+      2:
+        Attribute: ["§4吸血: §e4%"]
+      3:
+        Attribute: ["§4吸血: §e6%"]
+      4:
+        Attribute: ["§4吸血: §e8%"]
+      5:
+        Attribute: ["§4吸血: §e10%"]
+
+  fengxing:
+    DisplayName: "§f§l风行石"
+    Type: FEATHER
+    CustomModelData: 0
+    Chance: 100.0
+    FailDestroyGem: false
+    FailDestroyEquip: false
+    MaxSameGem: 2
+    MinCuiLianLevel: 0
+    RemoveChance: 100.0
+    AllowTypes: [Boots, Leggings]
+    Description: "§7轻若鸿毛的风灵晶羽，令行步生风"
+    Levels:
+      1:
+        Attribute: ["§b移动速度: §e3%"]
+      2:
+        Attribute: ["§b移动速度: §e6%"]
+      3:
+        Attribute: ["§b移动速度: §e9%"]
+      4:
+        Attribute: ["§b移动速度: §e12%"]
+      5:
+        Attribute: ["§b移动速度: §e15%"]
+
+  zixiao:
+    DisplayName: "§5§l紫霄石"
+    Type: AMETHYST_SHARD
+    CustomModelData: 0
+    Chance: 100.0
+    FailDestroyGem: false
+    FailDestroyEquip: false
+    MaxSameGem: 2
+    MinCuiLianLevel: 0
+    RemoveChance: 100.0
+    AllowTypes: [Hand]
+    Description: "§7紫霄雷晶凝炼而成，大幅增幅暴击爆发伤害"
+    Levels:
+      1:
+        Attribute: ["§5暴击伤害: §e8%"]
+      2:
+        Attribute: ["§5暴击伤害: §e16%"]
+      3:
+        Attribute: ["§5暴击伤害: §e24%"]
+      4:
+        Attribute: ["§5暴击伤害: §e32%"]
+      5:
+        Attribute: ["§5暴击伤害: §e40%"]
+
+  canglan:
+    DisplayName: "§3§l沧澜石"
+    Type: ECHO_SHARD
+    CustomModelData: 0
+    Chance: 100.0
+    FailDestroyGem: false
+    FailDestroyEquip: false
+    MaxSameGem: 2
+    MinCuiLianLevel: 0
+    RemoveChance: 100.0
+    AllowTypes: [Helmet, Chestplate, Leggings, Boots]
+    Description: "§7幽邃回响之晶，强化护甲韧性并反弹部分伤害"
+    Levels:
+      1:
+        Attribute: ["§3盔甲韧性: §e0.5", "§3伤害反弹: §e3%"]
+      2:
+        Attribute: ["§3盔甲韧性: §e1", "§3伤害反弹: §e6%"]
+      3:
+        Attribute: ["§3盔甲韧性: §e1.5", "§3伤害反弹: §e9%"]
+      4:
+        Attribute: ["§3盔甲韧性: §e2", "§3伤害反弹: §e12%"]
+      5:
+        Attribute: ["§3盔甲韧性: §e2.5", "§3伤害反弹: §e15%"]

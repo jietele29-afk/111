@@ -1,0 +1,44 @@
+# 开启内置原生属性与战斗计算引擎（默认 true，无需任何第三方属性插件即可让淬炼与宝石属性真实生效！）
+# 如果你同时安装了 AttributePlus / SX-Attribute 并希望完全交给它们解析 Lore，可将其设为 false 避免重复叠加
+NativeAttributeEngine: true
+
+# 开启非玩家实体套装粒子特效 true(开)/false(关) 不建议开启
+OtherEntitySuitEffect: false
+# 保护符lore行识别符号，不冲突的情况下勿乱改
+PROTECT_RUNE_JUDGE: "§a§l保护符: "
+# 属性lore行识别符号，不冲突的情况下勿乱改
+LEVEL_JUDGE: "§e§l淬炼属性: "
+# 移星界面标题
+MoveLevelInvTitle: "§8淬炼移星"
+# 套装效果是否判断副手
+JudgeOffHand: false
+# 淬炼后物品名称格式 0为不显示+等级 1为+等级显示在前 2为+等级显示在后
+DisplayNameFormat: 1
+# 淬炼后删除包含以下字符串的lore
+ReplaceLore: []
+
+# ==================== 高星装备粒子特效配置 ====================
+ParticleEffect:
+  # 是否开启高星装备（手持或穿戴任意单件达标即触发）炫酷粒子特效
+  Enable: true
+  # 触发粒子特效的最低淬炼星级（默认6星：6-8星脚下星辉法阵，9-11星炽焰法阵+螺旋光带，12-14星光翼+法阵，15-18星至尊双翼+六芒星法阵）
+  MinLevel: 6
+
+# ==================== 宝石镶嵌系统配置 ====================
+Gem:
+  # 是否启用宝石镶嵌系统（全部在背包内右键直接完成，无需打孔与镶嵌界面）
+  Enable: true
+  # 每件可淬炼装备默认可用的宝石槽位数
+  MaxSlots: 3
+  # 宝石属性lore行识别前缀（淬炼升级/降级时会自动保留宝石行）
+  GEM_JUDGE: "§b§l宝石属性: "
+  # 宝石区块分隔线
+  UNDER_LINE: "§b§l§m  §3§l§m  §9§l§m  §e§l宝石镶嵌§9§l§m  §3§l§m  §b§l§m  "
+  # 空宝石槽位显示文本
+  SLOT_EMPTY_LORE: "§7◇ 空宝石槽位"
+  # 已镶嵌宝石名称前缀
+  SLOT_FILLED_PREFIX: "§b◆ "
+  # 宝石拆卸GUI标题（/cuilian gem remove 或背包右键拆卸符）
+  RemoveInvTitle: "§8装备宝石拆卸"
+  # OP物品库GUI标题（/cuilian op）
+  OpItemsInvTitle: "§8[OP] 淬炼与宝石全物品库"

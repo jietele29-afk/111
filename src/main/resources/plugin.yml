@@ -1,0 +1,18 @@
+name: NewCustomCuiLianPro
+version: '1.3.0'
+main: lvhaoxuan.custom.cuilian.NewCustomCuiLianPro
+api-version: '1.20'
+author: Mcayear
+softdepend: [LLib, NashornJs, AttributePlus, SX-Attribute]
+commands:
+  cuilian:
+    description: 装备淬炼与宝石镶嵌主指令
+    usage: /cuilian
+    aliases: [cl, gem]
+permissions:
+  cuilian.admin:
+    description: 允许使用所有淬炼与宝石管理指令及OP物品库
+    default: op
+  cuilian.use:
+    description: 允许使用玩家基础指令（移星、宝石拆卸）
+    default: true
