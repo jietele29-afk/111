@@ -1,0 +1,140 @@
+# ==================== 宝石辅助工具配置 ====================
+Tools:
+  PunchItem:
+    Name: "§e§l装备打孔符"
+    Type: FLINT
+    CustomModelData: 0
+    Chance: 80.0
+    Lore:
+      - "§e用法：§a使用 /cuilian gem 打开镶嵌界面，或在背包内右键装备"
+      - "§e作用：§a为可淬炼装备增加 1 个宝石槽位"
+      - "§e成功率：§b80%"
+  RemoveItem:
+    Name: "§d§l宝石拆卸符"
+    Type: SHEARS
+    CustomModelData: 0
+    Lore:
+      - "§e用法：§a手持装备输入 /cuilian gem remove 进行拆卸"
+      - "§e作用：§a将装备上已镶嵌的宝石安全取下"
+
+# ==================== 宝石列表配置 ====================
+Gems:
+  attack_1:
+    Name: "§c§l初级攻击宝石"
+    Type: REDSTONE
+    CustomModelData: 0
+    Chance: 85.0
+    FailDestroyGem: true
+    FailDestroyEquip: false
+    MaxSameGem: 2
+    MinCuiLianLevel: 0
+    RemoveChance: 100.0
+    AllowTypes:
+      - Hand
+    Lore:
+      - "§e用法：§a使用 /cuilian gem 打开镶嵌界面，或在背包内右键装备"
+      - "§e适用部位：§f武器 (Hand)"
+      - "§e成功率：§a85%"
+      - "§e属性加成："
+      - "§7  - §c物理伤害: §e15"
+    Attribute:
+      - "§c物理伤害: §e15"
+    PotionEffect: []
+
+  attack_2:
+    Name: "§4§l高级攻击宝石"
+    Type: REDSTONE_BLOCK
+    CustomModelData: 0
+    Chance: 65.0
+    FailDestroyGem: true
+    FailDestroyEquip: false
+    MaxSameGem: 1
+    MinCuiLianLevel: 3
+    RemoveChance: 90.0
+    AllowTypes:
+      - Hand
+    Lore:
+      - "§e用法：§a使用 /cuilian gem 打开镶嵌界面，或在背包内右键装备"
+      - "§e适用部位：§f武器 (Hand) §7(需淬炼≥3星)"
+      - "§e成功率：§e65%"
+      - "§e属性加成："
+      - "§7  - §c物理伤害: §e45"
+      - "§7  - §6暴击几率: §e5%"
+    Attribute:
+      - "§c物理伤害: §e45"
+      - "§6暴击几率: §e5%"
+    PotionEffect: []
+
+  defense_1:
+    Name: "§9§l初级防御宝石"
+    Type: LAPIS_LAZULI
+    CustomModelData: 0
+    Chance: 85.0
+    FailDestroyGem: true
+    FailDestroyEquip: false
+    MaxSameGem: 2
+    MinCuiLianLevel: 0
+    RemoveChance: 100.0
+    AllowTypes:
+      - Helmet
+      - Chestplate
+      - Leggings
+      - Boots
+    Lore:
+      - "§e用法：§a使用 /cuilian gem 打开镶嵌界面，或在背包内右键装备"
+      - "§e适用部位：§f防具"
+      - "§e成功率：§a85%"
+      - "§e属性加成："
+      - "§7  - §9物理防御: §e10"
+    Attribute:
+      - "§9物理防御: §e10"
+    PotionEffect: []
+
+  hp_1:
+    Name: "§a§l生命翡翠宝石"
+    Type: EMERALD
+    CustomModelData: 0
+    Chance: 75.0
+    FailDestroyGem: true
+    FailDestroyEquip: false
+    MaxSameGem: 2
+    MinCuiLianLevel: 0
+    RemoveChance: 100.0
+    AllowTypes:
+      - Helmet
+      - Chestplate
+      - Leggings
+      - Boots
+    Lore:
+      - "§e用法：§a使用 /cuilian gem 打开镶嵌界面，或在背包内右键装备"
+      - "§e适用部位：§f防具"
+      - "§e成功率：§a75%"
+      - "§e属性加成："
+      - "§7  - §a生命上限: §e20"
+    Attribute:
+      - "§a生命上限: §e20"
+    PotionEffect: []
+
+  speed_1:
+    Name: "§b§l疾风迅捷宝石"
+    Type: AMETHYST_SHARD
+    CustomModelData: 0
+    Chance: 70.0
+    FailDestroyGem: true
+    FailDestroyEquip: false
+    MaxSameGem: 1
+    MinCuiLianLevel: 3
+    RemoveChance: 95.0
+    AllowTypes:
+      - Boots
+    Lore:
+      - "§e用法：§a使用 /cuilian gem 打开镶嵌界面，或在背包内右键装备"
+      - "§e适用部位：§f靴子 (Boots) §7(需淬炼≥3星)"
+      - "§e成功率：§e70%"
+      - "§e属性加成："
+      - "§7  - §b移动速度: §e10%"
+      - "§7  - §d被动效果: 迅捷 I"
+    Attribute:
+      - "§b移动速度: §e10%"
+    PotionEffect:
+      - "SPEED 0"
